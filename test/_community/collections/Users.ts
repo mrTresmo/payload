@@ -5,6 +5,7 @@ const Users: CollectionConfig = {
   auth: true,
   access: {
     update: ({ req }) => {
+      if (!req?.user?.id) return false;
       return {
         id: {
           equals: req.user.id,
