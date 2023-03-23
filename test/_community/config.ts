@@ -1,18 +1,10 @@
 import { buildConfig } from '../buildConfig';
-import { PostsCollection, postsSlug } from './collections/Posts';
-import { MenuGlobal } from './globals/Menu';
-import { devUser } from '../credentials';
+import Users from './collections/Users';
+import { devUser, regularUser, regularUser2 } from '../credentials';
 
 export default buildConfig({
   // ...extend config here
-  collections: [
-    PostsCollection,
-    // ...add more collections here
-  ],
-  globals: [
-    MenuGlobal,
-    // ...add more globals here
-  ],
+  collections: [Users],
 
   onInit: async (payload) => {
     await payload.create({
@@ -24,9 +16,18 @@ export default buildConfig({
     });
 
     await payload.create({
-      collection: postsSlug,
+      collection: 'users',
       data: {
-        text: 'example post',
+        email: regularUser.email,
+        password: regularUser.password,
+      },
+    });
+
+    await payload.create({
+      collection: 'users',
+      data: {
+        email: regularUser2.email,
+        password: regularUser2.password,
       },
     });
   },

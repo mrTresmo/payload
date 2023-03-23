@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
 import payload from '../../src';
 import { initPayloadTest } from '../helpers/configHelpers';
-import { devUser } from '../credentials';
-import { postsSlug } from './collections/Posts';
+import { regularUser, regularUser2 } from '../credentials';
 
 require('isomorphic-fetch');
 
@@ -12,19 +11,21 @@ let jwt;
 const headers = {
   'Content-Type': 'application/json',
 };
-const { email, password } = devUser;
 describe('_Community Tests', () => {
   // --__--__--__--__--__--__--__--__--__
   // Boilerplate test setup/teardown
   // --__--__--__--__--__--__--__--__--__
   beforeAll(async () => {
-    const { serverURL } = await initPayloadTest({ __dirname, init: { local: false } });
+    const { serverURL } = await initPayloadTest({
+      __dirname,
+      init: { local: false },
+    });
     apiUrl = `${serverURL}/api`;
 
     const response = await fetch(`${apiUrl}/users/login`, {
       body: JSON.stringify({
-        email,
-        password,
+        email: regularUser.email,
+        password: regularUser.password,
       }),
       headers,
       method: 'post',
@@ -40,34 +41,28 @@ describe('_Community Tests', () => {
     await payload.mongoMemoryServer.stop();
   });
 
-  // --__--__--__--__--__--__--__--__--__
-  // You can run tests against the local API or the REST API
-  // use the tests below as a guide
-  // --__--__--__--__--__--__--__--__--__
-
-  it('local API example', async () => {
-    const newPost = await payload.create({
-      collection: postsSlug,
-      data: {
-        text: 'LOCAL API EXAMPLE',
+  it('update another user should fail with error 403', async () => {
+    const user = await payload.find({
+      collection: 'users',
+      where: {
+        email: {
+          equals: regularUser2.email,
+        },
       },
+      overrideAccess: true,
     });
 
-    expect(newPost.text).toEqual('LOCAL API EXAMPLE');
-  });
-
-  it('rest API example', async () => {
-    const newPost = await fetch(`${apiUrl}/${postsSlug}`, {
-      method: 'POST',
+    const updatedUser = await fetch(`${apiUrl}/users/${user.docs[0].id}`, {
+      method: 'PATCH',
       headers: {
         ...headers,
         Authorization: `JWT ${jwt}`,
       },
       body: JSON.stringify({
-        text: 'REST API EXAMPLE',
+        firstname: 'firstname',
       }),
-    }).then((res) => res.json());
+    });
 
-    expect(newPost.doc.text).toEqual('REST API EXAMPLE');
+    expect(updatedUser.status).toEqual(403);
   });
 });
